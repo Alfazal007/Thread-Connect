@@ -13,3 +13,6 @@ select * from users where id=$1;
 -- name: UpdateRefreshToken :one
 update users set refresh_token=$1 where id=$2 returning *;
 
+-- name: UpdatePassword :one
+update users set password=$1 where id=$2 returning *;
+
