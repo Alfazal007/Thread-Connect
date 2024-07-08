@@ -12,6 +12,7 @@ CREATE TABLE tweets (
     id uuid PRIMARY KEY,
     content text,
     media text,
+    public_id text,
     user_id uuid not null references users(id) on delete cascade,
     reply_tweet_id uuid references tweets(id),
     repost uuid references tweets(id) on delete cascade

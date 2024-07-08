@@ -10,6 +10,7 @@ import (
 	"thread-connect/internal/database"
 	"thread-connect/routes"
 
+	"github.com/cloudinary/cloudinary-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
@@ -43,8 +44,22 @@ func main() {
 		log.Fatal("Error opening database connection", err)
 	}
 	apiCfg := controllers.ApiCfg{DB: database.New(conn)}
+	cloudName := os.Getenv("CLOUDINARY_CLOUD_NAME")
+	cloudApiKey := os.Getenv("CLOUDINARY_API_KEY")
+	cloudApiSecret := os.Getenv("CLOUDINARY_API_SECRET")
+	if cloudName == "" || cloudApiKey == "" || cloudApiSecret == "" {
+		log.Fatal("There was an issue getting env variables of cloudinary")
+	}
+
+	cld, err := cloudinary.NewFromParams(cloudName, cloudApiKey, cloudApiSecret)
+	if err != nil {
+		log.Fatalf("Failed to initialize Cloudinary, %v", err)
+	}
+	apiCfg.Cld = cld
 	userRouter := routes.UserRouter(&apiCfg)
 	r.Mount("/user", userRouter)
+	tweetRouter := routes.TweetRouter(&apiCfg)
+	r.Mount("/tweet", tweetRouter)
 	srv := &http.Server{
 		Handler: r,
 		Addr:    fmt.Sprintf(":%v", portNumber),

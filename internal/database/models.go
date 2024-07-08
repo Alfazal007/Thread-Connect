@@ -42,6 +42,7 @@ type Tweet struct {
 	ID           uuid.UUID
 	Content      sql.NullString
 	Media        sql.NullString
+	PublicID     sql.NullString
 	UserID       uuid.UUID
 	ReplyTweetID uuid.NullUUID
 	Repost       uuid.NullUUID
