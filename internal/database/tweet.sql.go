@@ -44,3 +44,46 @@ func (q *Queries) CreateNewTweet(ctx context.Context, arg CreateNewTweetParams) 
 	)
 	return i, err
 }
+
+const deleteATweet = `-- name: DeleteATweet :one
+delete from tweets where id=$1 and user_id=$2 returning id, content, media, public_id, user_id, reply_tweet_id, repost
+`
+
+type DeleteATweetParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteATweet(ctx context.Context, arg DeleteATweetParams) (Tweet, error) {
+	row := q.db.QueryRowContext(ctx, deleteATweet, arg.ID, arg.UserID)
+	var i Tweet
+	err := row.Scan(
+		&i.ID,
+		&i.Content,
+		&i.Media,
+		&i.PublicID,
+		&i.UserID,
+		&i.ReplyTweetID,
+		&i.Repost,
+	)
+	return i, err
+}
+
+const findATweet = `-- name: FindATweet :one
+select id, content, media, public_id, user_id, reply_tweet_id, repost from tweets where id=$1
+`
+
+func (q *Queries) FindATweet(ctx context.Context, id uuid.UUID) (Tweet, error) {
+	row := q.db.QueryRowContext(ctx, findATweet, id)
+	var i Tweet
+	err := row.Scan(
+		&i.ID,
+		&i.Content,
+		&i.Media,
+		&i.PublicID,
+		&i.UserID,
+		&i.ReplyTweetID,
+		&i.Repost,
+	)
+	return i, err
+}

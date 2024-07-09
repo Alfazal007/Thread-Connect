@@ -19,8 +19,10 @@ func (apiCfg *ApiCfg) cloudinarUploader(r *http.Request, fileName string) (strin
 	return uploadResult.SecureURL, uploadResult.PublicID, nil
 }
 
-/*
-func (apiCfg *ApiCfg) cloudinaryDeleter(r *http.Request, publicId string) (string, error) {
-	apiCfg.Cld.Upload.Destroy(r.Context(), uploader.DestroyParams{PublicID: publicId})
+func (apiCfg *ApiCfg) cloudinaryDeleter(r *http.Request, publicId string) error {
+	_, err := apiCfg.Cld.Upload.Destroy(r.Context(), uploader.DestroyParams{PublicID: publicId})
+	if err != nil {
+		return err
+	}
+	return nil
 }
-*/
