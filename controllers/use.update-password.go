@@ -7,6 +7,7 @@ import (
 	"strings"
 	"thread-connect/helpers"
 	"thread-connect/internal/database"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -57,8 +58,9 @@ func (apiCfg *ApiCfg) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	updatedUser, err := apiCfg.DB.UpdatePassword(r.Context(), database.UpdatePasswordParams{
-		Password: newPassword,
-		ID:       user.ID,
+		Password:  newPassword,
+		ID:        user.ID,
+		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
 		helpers.RespondWithError(w, 400, "Issue updating the password in the database")

@@ -8,19 +8,22 @@ package database
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
-insert into users (id, username, password, email) values ($1, $2, $3, $4) returning id, username, password, refresh_token, email
+insert into users (id, username, password, email, created_at, updated_at) values ($1, $2, $3, $4, $5, $6) returning id, username, password, refresh_token, email, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	ID       uuid.UUID
-	Username string
-	Password string
-	Email    string
+	ID        uuid.UUID
+	Username  string
+	Password  string
+	Email     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -29,6 +32,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Username,
 		arg.Password,
 		arg.Email,
+		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	var i User
 	err := row.Scan(
@@ -37,6 +42,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Password,
 		&i.RefreshToken,
 		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -58,7 +65,7 @@ func (q *Queries) GetUniqueUser(ctx context.Context, arg GetUniqueUserParams) (i
 }
 
 const getUserById = `-- name: GetUserById :one
-select id, username, password, refresh_token, email from users where id=$1
+select id, username, password, refresh_token, email, created_at, updated_at from users where id=$1
 `
 
 func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
@@ -70,12 +77,14 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Password,
 		&i.RefreshToken,
 		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getUserByName = `-- name: GetUserByName :one
-select id, username, password, refresh_token, email from users where username=$1
+select id, username, password, refresh_token, email, created_at, updated_at from users where username=$1
 `
 
 func (q *Queries) GetUserByName(ctx context.Context, username string) (User, error) {
@@ -87,21 +96,24 @@ func (q *Queries) GetUserByName(ctx context.Context, username string) (User, err
 		&i.Password,
 		&i.RefreshToken,
 		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const updatePassword = `-- name: UpdatePassword :one
-update users set password=$1 where id=$2 returning id, username, password, refresh_token, email
+update users set password=$1,updated_at=$2 where id=$3 returning id, username, password, refresh_token, email, created_at, updated_at
 `
 
 type UpdatePasswordParams struct {
-	Password string
-	ID       uuid.UUID
+	Password  string
+	UpdatedAt time.Time
+	ID        uuid.UUID
 }
 
 func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updatePassword, arg.Password, arg.ID)
+	row := q.db.QueryRowContext(ctx, updatePassword, arg.Password, arg.UpdatedAt, arg.ID)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -109,21 +121,24 @@ func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) 
 		&i.Password,
 		&i.RefreshToken,
 		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const updateRefreshToken = `-- name: UpdateRefreshToken :one
-update users set refresh_token=$1 where id=$2 returning id, username, password, refresh_token, email
+update users set refresh_token=$1, updated_at=$2 where id=$3 returning id, username, password, refresh_token, email, created_at, updated_at
 `
 
 type UpdateRefreshTokenParams struct {
 	RefreshToken sql.NullString
+	UpdatedAt    time.Time
 	ID           uuid.UUID
 }
 
 func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateRefreshToken, arg.RefreshToken, arg.ID)
+	row := q.db.QueryRowContext(ctx, updateRefreshToken, arg.RefreshToken, arg.UpdatedAt, arg.ID)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -131,6 +146,8 @@ func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshToken
 		&i.Password,
 		&i.RefreshToken,
 		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

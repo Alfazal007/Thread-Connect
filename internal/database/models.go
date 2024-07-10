@@ -6,6 +6,7 @@ package database
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -43,6 +44,7 @@ type Tweet struct {
 	Content      sql.NullString
 	Media        sql.NullString
 	PublicID     sql.NullString
+	CreatedAt    time.Time
 	UserID       uuid.UUID
 	ReplyTweetID uuid.NullUUID
 	Repost       uuid.NullUUID
@@ -54,4 +56,6 @@ type User struct {
 	Password     string
 	RefreshToken sql.NullString
 	Email        string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }

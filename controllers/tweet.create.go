@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"thread-connect/helpers"
 	"thread-connect/internal/database"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -66,11 +67,12 @@ func (apiCfg *ApiCfg) CreateNewTweetWithMedia(w http.ResponseWriter, r *http.Req
 	}
 	os.Remove(dstPath)
 	uploadedTweet, err := apiCfg.DB.CreateNewTweet(r.Context(), database.CreateNewTweetParams{
-		ID:       uuid.New(),
-		Content:  sql.NullString{String: content, Valid: true},
-		Media:    sql.NullString{String: url, Valid: true},
-		PublicID: sql.NullString{String: publicId, Valid: true},
-		UserID:   user.ID,
+		ID:        uuid.New(),
+		Content:   sql.NullString{String: content, Valid: true},
+		Media:     sql.NullString{String: url, Valid: true},
+		PublicID:  sql.NullString{String: publicId, Valid: true},
+		UserID:    user.ID,
+		CreatedAt: time.Now().UTC(),
 	})
 	if err != nil {
 		os.Remove(dstPath)

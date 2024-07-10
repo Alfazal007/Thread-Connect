@@ -7,6 +7,7 @@ import (
 	"strings"
 	"thread-connect/helpers"
 	"thread-connect/internal/database"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -61,10 +62,12 @@ func (apiCfg *ApiCfg) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 	// add to the database
 	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
-		ID:       uuid.New(),
-		Username: params.Username,
-		Email:    params.Email,
-		Password: hashedPassword,
+		ID:        uuid.New(),
+		Username:  params.Username,
+		Email:     params.Email,
+		Password:  hashedPassword,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
 		helpers.RespondWithError(w, 400, "Error talking to the database")

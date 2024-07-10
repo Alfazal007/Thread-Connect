@@ -11,6 +11,8 @@ type CustomUser struct {
 	Email        string    `json:"email"`
 	Id           uuid.UUID `json:"id"`
 	RefreshToken string    `json:"refresh_token"`
+	CreatedAt    string    `json:"created_at"`
+	UpdatedAt    string    `json:"updated_at"`
 }
 
 func CustomUserReturner(user database.User) CustomUser {
@@ -19,5 +21,7 @@ func CustomUserReturner(user database.User) CustomUser {
 		Email:        user.Email,
 		Id:           user.ID,
 		RefreshToken: user.RefreshToken.String,
+		CreatedAt:    user.CreatedAt.String(),
+		UpdatedAt:    user.UpdatedAt.String(),
 	}
 }

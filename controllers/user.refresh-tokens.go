@@ -43,6 +43,7 @@ func (apiCfg *ApiCfg) RefreshTokens(w http.ResponseWriter, r *http.Request) {
 	_, err = apiCfg.DB.UpdateRefreshToken(r.Context(), database.UpdateRefreshTokenParams{
 		RefreshToken: sql.NullString{String: refreshToken, Valid: true},
 		ID:           user.ID,
+		UpdatedAt:    time.Now().UTC(),
 	})
 	if err != nil {
 		helpers.RespondWithError(w, 400, "Could not update the database")

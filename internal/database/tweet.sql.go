@@ -8,20 +8,22 @@ package database
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const createNewTweet = `-- name: CreateNewTweet :one
-insert into tweets (id, content, media, public_id, user_id) values ($1, $2, $3, $4, $5) returning id, content, media, public_id, user_id, reply_tweet_id, repost
+insert into tweets (id, content, media, public_id, user_id, created_at) values ($1, $2, $3, $4, $5, $6) returning id, content, media, public_id, created_at, user_id, reply_tweet_id, repost
 `
 
 type CreateNewTweetParams struct {
-	ID       uuid.UUID
-	Content  sql.NullString
-	Media    sql.NullString
-	PublicID sql.NullString
-	UserID   uuid.UUID
+	ID        uuid.UUID
+	Content   sql.NullString
+	Media     sql.NullString
+	PublicID  sql.NullString
+	UserID    uuid.UUID
+	CreatedAt time.Time
 }
 
 func (q *Queries) CreateNewTweet(ctx context.Context, arg CreateNewTweetParams) (Tweet, error) {
@@ -31,6 +33,7 @@ func (q *Queries) CreateNewTweet(ctx context.Context, arg CreateNewTweetParams) 
 		arg.Media,
 		arg.PublicID,
 		arg.UserID,
+		arg.CreatedAt,
 	)
 	var i Tweet
 	err := row.Scan(
@@ -38,6 +41,39 @@ func (q *Queries) CreateNewTweet(ctx context.Context, arg CreateNewTweetParams) 
 		&i.Content,
 		&i.Media,
 		&i.PublicID,
+		&i.CreatedAt,
+		&i.UserID,
+		&i.ReplyTweetID,
+		&i.Repost,
+	)
+	return i, err
+}
+
+const createNewTweetNoMedia = `-- name: CreateNewTweetNoMedia :one
+insert into tweets (id, content, user_id, created_at) values ($1, $2, $3, $4) returning id, content, media, public_id, created_at, user_id, reply_tweet_id, repost
+`
+
+type CreateNewTweetNoMediaParams struct {
+	ID        uuid.UUID
+	Content   sql.NullString
+	UserID    uuid.UUID
+	CreatedAt time.Time
+}
+
+func (q *Queries) CreateNewTweetNoMedia(ctx context.Context, arg CreateNewTweetNoMediaParams) (Tweet, error) {
+	row := q.db.QueryRowContext(ctx, createNewTweetNoMedia,
+		arg.ID,
+		arg.Content,
+		arg.UserID,
+		arg.CreatedAt,
+	)
+	var i Tweet
+	err := row.Scan(
+		&i.ID,
+		&i.Content,
+		&i.Media,
+		&i.PublicID,
+		&i.CreatedAt,
 		&i.UserID,
 		&i.ReplyTweetID,
 		&i.Repost,
@@ -46,7 +82,7 @@ func (q *Queries) CreateNewTweet(ctx context.Context, arg CreateNewTweetParams) 
 }
 
 const deleteATweet = `-- name: DeleteATweet :one
-delete from tweets where id=$1 and user_id=$2 returning id, content, media, public_id, user_id, reply_tweet_id, repost
+delete from tweets where id=$1 and user_id=$2 returning id, content, media, public_id, created_at, user_id, reply_tweet_id, repost
 `
 
 type DeleteATweetParams struct {
@@ -62,6 +98,7 @@ func (q *Queries) DeleteATweet(ctx context.Context, arg DeleteATweetParams) (Twe
 		&i.Content,
 		&i.Media,
 		&i.PublicID,
+		&i.CreatedAt,
 		&i.UserID,
 		&i.ReplyTweetID,
 		&i.Repost,
@@ -70,7 +107,7 @@ func (q *Queries) DeleteATweet(ctx context.Context, arg DeleteATweetParams) (Twe
 }
 
 const findATweet = `-- name: FindATweet :one
-select id, content, media, public_id, user_id, reply_tweet_id, repost from tweets where id=$1
+select id, content, media, public_id, created_at, user_id, reply_tweet_id, repost from tweets where id=$1
 `
 
 func (q *Queries) FindATweet(ctx context.Context, id uuid.UUID) (Tweet, error) {
@@ -81,9 +118,51 @@ func (q *Queries) FindATweet(ctx context.Context, id uuid.UUID) (Tweet, error) {
 		&i.Content,
 		&i.Media,
 		&i.PublicID,
+		&i.CreatedAt,
 		&i.UserID,
 		&i.ReplyTweetID,
 		&i.Repost,
 	)
 	return i, err
+}
+
+const getPaginatedTweet = `-- name: GetPaginatedTweet :many
+SELECT id, content, media, public_id, created_at, user_id, reply_tweet_id, repost FROM tweets ORDER BY created_at LIMIT $1 OFFSET $2
+`
+
+type GetPaginatedTweetParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) GetPaginatedTweet(ctx context.Context, arg GetPaginatedTweetParams) ([]Tweet, error) {
+	rows, err := q.db.QueryContext(ctx, getPaginatedTweet, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Tweet
+	for rows.Next() {
+		var i Tweet
+		if err := rows.Scan(
+			&i.ID,
+			&i.Content,
+			&i.Media,
+			&i.PublicID,
+			&i.CreatedAt,
+			&i.UserID,
+			&i.ReplyTweetID,
+			&i.Repost,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
