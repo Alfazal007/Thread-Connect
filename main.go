@@ -60,6 +60,9 @@ func main() {
 	r.Mount("/user", userRouter)
 	tweetRouter := routes.TweetRouter(&apiCfg)
 	r.Mount("/tweet", tweetRouter)
+	followRouter := routes.FollowRouter(&apiCfg)
+	r.Mount("/follow-user", followRouter)
+
 	srv := &http.Server{
 		Handler: r,
 		Addr:    fmt.Sprintf(":%v", portNumber),
