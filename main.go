@@ -62,6 +62,8 @@ func main() {
 	r.Mount("/tweet", tweetRouter)
 	followRouter := routes.FollowRouter(&apiCfg)
 	r.Mount("/follow-user", followRouter)
+	repostRouter := routes.RepostRouter(&apiCfg)
+	r.Mount("/repost", repostRouter)
 
 	srv := &http.Server{
 		Handler: r,
