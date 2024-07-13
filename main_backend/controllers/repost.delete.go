@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"thread-connect/helpers"
 	"thread-connect/internal/database"
@@ -46,6 +48,24 @@ func (apiCfg *ApiCfg) RemoveRepost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO:: NEED TO ADD A PUB SUB TO DECREASE THE COUNT'
+	type Repost struct {
+		Type    string `json:"type"`
+		TweetId string `json:"tweetId"`
+		Numb    string `json:"numb"`
+	}
+	// here type has repost type and tweetId is self explanatory and Numb shows increment or decrement
+	repostType := Repost{
+		Type:    "repost",
+		TweetId: repost.TweetID.String(),
+		Numb:    "decrement",
+	}
+	repostTypeStr := fmt.Sprintf(`{"type":"%s","tweetId":"%s","numb":"%s"}`,
+		repostType.Type, repostType.TweetId, repostType.Numb)
+
+	err = apiCfg.Rdb.LPush(context.Background(), "worker", repostTypeStr).Err()
+	if err != nil {
+		println("Error adding to the redis queue")
+	}
 	type Message struct {
 		Data string `json:"data"`
 	}

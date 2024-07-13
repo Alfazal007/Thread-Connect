@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -53,6 +54,17 @@ func main() {
 			fmt.Println("Error popping from Redis:", err)
 			return
 		}
-		println(val[1]) // use this for doing the database calls
+
+		var repost controllers.Incoming
+		err = json.Unmarshal([]byte(val[1]), &repost)
+		if err != nil {
+			fmt.Println("Error unmarshalling JSON:", err)
+			return
+		}
+		if repost.Type == "repost" {
+			apiCfg.ChangeRepostCount(repost)
+		} else {
+			println("Do something later")
+		}
 	}
 }

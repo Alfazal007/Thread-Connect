@@ -7,10 +7,25 @@ package database
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
+
+const addNewRepost = `-- name: AddNewRepost :one
+INSERT INTO repost_count (tweet_id, count) VALUES ($1, $2) returning tweet_id, count
+`
+
+type AddNewRepostParams struct {
+	TweetID uuid.UUID
+	Count   int32
+}
+
+func (q *Queries) AddNewRepost(ctx context.Context, arg AddNewRepostParams) (RepostCount, error) {
+	row := q.db.QueryRowContext(ctx, addNewRepost, arg.TweetID, arg.Count)
+	var i RepostCount
+	err := row.Scan(&i.TweetID, &i.Count)
+	return i, err
+}
 
 const countRepostActual = `-- name: CountRepostActual :one
 select count(*) from repost where tweet_id=$1
@@ -23,20 +38,28 @@ func (q *Queries) CountRepostActual(ctx context.Context, tweetID uuid.UUID) (int
 	return count, err
 }
 
+const deleteRepost = `-- name: DeleteRepost :one
+delete from repost_count where tweet_id=$1 returning tweet_id, count
+`
+
+func (q *Queries) DeleteRepost(ctx context.Context, tweetID uuid.UUID) (RepostCount, error) {
+	row := q.db.QueryRowContext(ctx, deleteRepost, tweetID)
+	var i RepostCount
+	err := row.Scan(&i.TweetID, &i.Count)
+	return i, err
+}
+
 const updateRepost = `-- name: UpdateRepost :one
-INSERT INTO repost_count (tweet_id, count)
-VALUES ($1, $2)
-ON CONFLICT (tweet_id)
-DO UPDATE SET count = $2 returning tweet_id, count
+update repost_count set count=$1 where tweet_id=$2 returning tweet_id, count
 `
 
 type UpdateRepostParams struct {
+	Count   int32
 	TweetID uuid.UUID
-	Count   sql.NullInt32
 }
 
 func (q *Queries) UpdateRepost(ctx context.Context, arg UpdateRepostParams) (RepostCount, error) {
-	row := q.db.QueryRowContext(ctx, updateRepost, arg.TweetID, arg.Count)
+	row := q.db.QueryRowContext(ctx, updateRepost, arg.Count, arg.TweetID)
 	var i RepostCount
 	err := row.Scan(&i.TweetID, &i.Count)
 	return i, err

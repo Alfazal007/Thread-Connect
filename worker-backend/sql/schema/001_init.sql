@@ -1,3 +1,4 @@
+
 -- +goose Up
 CREATE TABLE users (
     id uuid PRIMARY KEY,
@@ -23,7 +24,7 @@ CREATE TABLE tweets (
 
 CREATE TABLE repost_count (
   tweet_id uuid PRIMARY KEY references tweets(id) on delete cascade,
-  count int default 0
+  count int default 0 not null
 );
 
 

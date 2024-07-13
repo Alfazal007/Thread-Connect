@@ -36,7 +36,7 @@ type Repost struct {
 
 type RepostCount struct {
 	TweetID uuid.UUID
-	Count   sql.NullInt32
+	Count   int32
 }
 
 type Tweet struct {

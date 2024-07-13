@@ -10,3 +10,8 @@ type ApiCfg struct {
 	DB  *database.Queries
 	Rdb *redis.Client
 }
+type Incoming struct {
+	Type    string `json:"type"`
+	TweetId string `json:"tweetId"`
+	Numb    string `json:"numb"`
+}
