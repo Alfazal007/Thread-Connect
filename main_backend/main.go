@@ -82,7 +82,10 @@ func main() {
 	r.Mount("/follow-user", followRouter)
 	repostRouter := routes.RepostRouter(&apiCfg)
 	r.Mount("/repost", repostRouter)
-
+	replyRouter := routes.ReplyRouter(&apiCfg)
+	r.Mount("/reply", replyRouter)
+	likeRouter := routes.LikeRouter(&apiCfg)
+	r.Mount("/like", likeRouter)
 	srv := &http.Server{
 		Handler: r,
 		Addr:    fmt.Sprintf(":%v", portNumber),

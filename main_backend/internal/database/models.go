@@ -25,7 +25,7 @@ type Like struct {
 
 type LikesCount struct {
 	TweetID uuid.UUID
-	Count   sql.NullInt32
+	Count   int32
 }
 
 type Repost struct {
