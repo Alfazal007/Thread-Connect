@@ -55,16 +55,18 @@ func main() {
 			return
 		}
 
-		var repost controllers.Incoming
-		err = json.Unmarshal([]byte(val[1]), &repost)
+		var dataInsert controllers.Incoming
+		err = json.Unmarshal([]byte(val[1]), &dataInsert)
 		if err != nil {
 			fmt.Println("Error unmarshalling JSON:", err)
 			return
 		}
-		if repost.Type == "repost" {
-			apiCfg.ChangeRepostCount(repost)
+		if dataInsert.Type == "repost" {
+			apiCfg.ChangeRepostCount(dataInsert)
+		} else if dataInsert.Type == "like" {
+			apiCfg.ChangeLikeCount(dataInsert)
 		} else {
-			println("Do something later")
+			println("unexpected data")
 		}
 	}
 }
