@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -78,6 +79,24 @@ func (apiCfg *ApiCfg) CreateNewTweetWithMedia(w http.ResponseWriter, r *http.Req
 		os.Remove(dstPath)
 		helpers.RespondWithError(w, 400, "Error writing to the database, try again later")
 		return
+	}
+	// worker send something
+	type Notification struct {
+		Type    string `json:"type"`
+		TweetId string `json:"tweetId"`
+		Numb    string `json:"numb"`
+	}
+	notificationType := Notification{
+		Type:    "notification",
+		TweetId: uploadedTweet.ID.String(),
+		Numb:    user.ID.String(),
+	}
+	notificationTypeStr := fmt.Sprintf(`{"type":"%s","tweetId":"%s","numb":"%s"}`,
+		notificationType.Type, notificationType.TweetId, notificationType.Numb)
+
+	err = apiCfg.Rdb.LPush(context.Background(), "worker", notificationTypeStr).Err()
+	if err != nil {
+		println("Error adding to the redis queue")
 	}
 	helpers.RespondWithJson(w, 200, helpers.CustomTweetConvertor(uploadedTweet))
 }
