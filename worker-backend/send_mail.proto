@@ -1,0 +1,16 @@
+syntax = "proto3";
+option go_package = "github.com/Alfazal007/worker/send_mail";
+
+message CreateRequest {
+  string fromusername = 1;
+  string link = 2;
+  repeated string to = 3;
+}
+
+message CreateResponse {
+  bool done = 1;
+}
+
+service SendMailService {
+  rpc SendMail(CreateRequest) returns (CreateResponse);
+}

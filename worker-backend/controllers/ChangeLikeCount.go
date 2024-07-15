@@ -2,7 +2,8 @@ package controllers
 
 import (
 	"context"
-	"worker/internal/database"
+
+	"github.com/Alfazal007/worker/internal/database"
 
 	"github.com/google/uuid"
 )

@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"thread-connect/helpers"
 	"thread-connect/internal/database"
@@ -40,6 +42,23 @@ func (apiCfg *ApiCfg) TweetNoMedia(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		helpers.RespondWithError(w, 400, "Error creating the tweet")
 		return
+	}
+	type Notification struct {
+		Type    string `json:"type"`
+		TweetId string `json:"tweetId"`
+		Numb    string `json:"numb"`
+	}
+	notificationType := Notification{
+		Type:    "notification",
+		TweetId: tweet.ID.String(),
+		Numb:    user.ID.String(),
+	}
+	notificationTypeStr := fmt.Sprintf(`{"type":"%s","tweetId":"%s","numb":"%s"}`,
+		notificationType.Type, notificationType.TweetId, notificationType.Numb)
+
+	err = apiCfg.Rdb.LPush(context.Background(), "worker", notificationTypeStr).Err()
+	if err != nil {
+		println("Error adding to the redis queue")
 	}
 	helpers.RespondWithJson(w, 201, helpers.CustomTweetConvertor(tweet))
 }
