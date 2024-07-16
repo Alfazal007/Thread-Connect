@@ -88,7 +88,7 @@ func main() {
 			// need to update
 			data := send_mail.CreateRequest{
 				Fromusername: username,
-				Link:         "http://localhost:8000/" + dataInsert.TweetId,
+				Link:         "http://localhost:8000/tweet/" + dataInsert.TweetId,
 				To:           to,
 			}
 			resp, err := apiCfg.GrpcClient.SendMail(context.Background(), &data)
